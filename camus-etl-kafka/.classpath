@@ -78,5 +78,6 @@
 	<classpathentry kind="lib" path="/Users/yning/git/camus-master/camus-api/target/camus-api-0.1.0-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="/Users/yning/git/camus-master/camus-kafka-coders/target/camus-kafka-coders-0.1.0-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="/Users/yning/git/camus-master/camus-schema-registry/target/camus-schema-registry-0.1.0-SNAPSHOT.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/google/code/gson/gson/2.2.4/gson-2.2.4.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
