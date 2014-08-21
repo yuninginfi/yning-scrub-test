@@ -21,6 +21,10 @@ public interface IEtlKey {
     long getOffset();
 
     long getChecksum();
+    
+    String getOutputPartitionColumn();
+    
+    int getOutputBucketingId();
 
     MapWritable getPartitionMap();
 

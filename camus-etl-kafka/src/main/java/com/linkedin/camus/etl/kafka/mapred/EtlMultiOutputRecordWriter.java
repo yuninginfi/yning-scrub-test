@@ -99,9 +99,10 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
           dataWriters.clear();
           currentTopic = key.getTopic();
         }
-
+         /*
         committer.addCounts(key);
-        CamusWrapper value = (CamusWrapper) val;
+        
+        
         String workingFileName = EtlMultiOutputFormat.getWorkingFileName(context, key);
         log.info("Working file name is:" + workingFileName);
         if (!dataWriters.containsKey(workingFileName))
@@ -109,20 +110,24 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
           dataWriters.put(workingFileName, getDataRecordWriter(context, workingFileName, value));
         }
         dataWriters.get(workingFileName).write(key, value);
-        
+        */
         //New output
 		if(key.getTopic().equals("partition_test"))
 		{
+			CamusWrapper value = (CamusWrapper) val;
 			log.info("value is :" + value.getRecord().toString());
 			try {
 				EtlKey newKey = new EtlKey(key);
+
 				JSONObject obj = new JSONObject(value.getRecord().toString());
 				String timestampStr = obj.getString("timestamp");
-				Date timestamp = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(timestampStr);
-				newKey.setTime(timestamp.getTime());
-		        
+				newKey.setOutputPartitionColumn(timestampStr);
+		        newKey.setOutputBucketingId(obj.getInt("bucketId"));
+		        log.info("bucketId is ===" + newKey.getOutputBucketingId());
+		        log.info("timestampStr is ===" + newKey.getOutputPartitionColumn());
+				committer.addCounts(newKey);
 		        String newWorkingFileName = EtlMultiOutputFormat.getWorkingFileName(context, newKey);
-		        log.info("New working file name is:" + workingFileName);
+		        log.info("New working file name is:" + newWorkingFileName);
 
 		        if (!dataWriters.containsKey(newWorkingFileName))
 		        {
@@ -132,10 +137,7 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			} 
 		}
       }
     }

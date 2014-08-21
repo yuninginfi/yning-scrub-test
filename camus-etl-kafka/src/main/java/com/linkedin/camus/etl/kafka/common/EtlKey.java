@@ -51,6 +51,8 @@ public class EtlKey implements WritableComparable<EtlKey>, IEtlKey {
 		this.server = other.server;
 		this.service = other.service;
 		this.leaderId = other.leaderId;
+		this.outputBucketingId = other.outputBucketingId;
+		this.outputPartitionColumn = other.outputPartitionColumn;
         this.partitionMap = new MapWritable(other.partitionMap);
 	}
 
@@ -233,6 +235,10 @@ public class EtlKey implements WritableComparable<EtlKey>, IEtlKey {
         builder.append(checksum);
         builder.append(" time=");
         builder.append(time);
+        builder.append(" outputPartitionColumn=");
+        builder.append(outputPartitionColumn);
+        builder.append(" outputBucketingId=");
+        builder.append(outputBucketingId);
 
         for (Map.Entry<Writable, Writable> e: partitionMap.entrySet()) {
             builder.append(" " + e.getKey() + "=");
@@ -240,5 +246,27 @@ public class EtlKey implements WritableComparable<EtlKey>, IEtlKey {
         }
 
         return builder.toString();
+	}
+
+	String outputPartitionColumn;
+
+	int outputBucketingId;
+	
+	@Override
+	public String getOutputPartitionColumn() {
+		return outputPartitionColumn;
+	}
+
+	@Override
+	public int getOutputBucketingId() {
+		return outputBucketingId;
+	}
+	
+	public void setOutputPartitionColumn(String outputPartitionColumn) {
+		this.outputPartitionColumn = outputPartitionColumn;
+	}
+
+	public void setOutputBucketingId(int outputBucketingId) {
+		this.outputBucketingId = outputBucketingId;
 	}
 }

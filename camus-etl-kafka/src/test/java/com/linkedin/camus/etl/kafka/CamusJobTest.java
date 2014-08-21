@@ -38,7 +38,7 @@ import com.linkedin.camus.etl.kafka.mapred.EtlInputFormat;
 import com.linkedin.camus.etl.kafka.mapred.EtlMultiOutputFormat;
 
 public class CamusJobTest {
-    
+    /*
     private static final Random RANDOM = new Random();
     
     private static final String BASE_PATH = "/camus";
@@ -218,6 +218,6 @@ public class CamusJobTest {
             
             return number == other.number;
         }
-    }
+    }*/
 
 }

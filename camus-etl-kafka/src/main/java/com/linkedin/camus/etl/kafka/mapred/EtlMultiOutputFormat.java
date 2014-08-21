@@ -19,6 +19,7 @@ import org.joda.time.format.DateTimeFormatter;
 import com.linkedin.camus.coders.Partitioner;
 import com.linkedin.camus.etl.RecordWriterProvider;
 import com.linkedin.camus.etl.kafka.coders.DefaultPartitioner;
+import com.linkedin.camus.etl.kafka.coders.TimestampBasedPartitioner;
 import com.linkedin.camus.etl.kafka.common.AvroRecordWriterProvider;
 import com.linkedin.camus.etl.kafka.common.DateUtils;
 import com.linkedin.camus.etl.kafka.common.EtlKey;
@@ -183,8 +184,10 @@ public class EtlMultiOutputFormat extends FileOutputFormat<EtlKey, Object> {
     }
 
     public static String getWorkingFileName(JobContext context, EtlKey key) throws IOException {
+    	log.info(key.getOutputBucketingId() + ":" + key.getOutputPartitionColumn());
         Partitioner partitioner = getPartitioner(context, key.getTopic());
-        return "data." + key.getTopic().replaceAll("\\.", "_") + "." + key.getLeaderId() + "." + key.getPartition() + "." + partitioner.encodePartition(context, key);
+        
+        return "data." + key.getTopic().replaceAll("\\.", "_") + "." + key.getLeaderId() + "." + key.getPartition() + "." + partitioner.encodePartition(context, key) + "." + key.getOutputBucketingId();
     }
     
     public static void setDefaultPartitioner(JobContext job, Class<?> cls) {
@@ -192,12 +195,13 @@ public class EtlMultiOutputFormat extends FileOutputFormat<EtlKey, Object> {
     }
     
     public static Partitioner getDefaultPartitioner(JobContext job) {
-        return ReflectionUtils.newInstance(job.getConfiguration().getClass(ETL_DEFAULT_PARTITIONER_CLASS, DefaultPartitioner.class, Partitioner.class), job.getConfiguration());
+        return ReflectionUtils.newInstance(job.getConfiguration().getClass(ETL_DEFAULT_PARTITIONER_CLASS, TimestampBasedPartitioner.class, Partitioner.class), job.getConfiguration());
     }    
 
     public static Partitioner getPartitioner(JobContext job, String topicName) throws IOException {
         String customPartitionerProperty = ETL_DEFAULT_PARTITIONER_CLASS + "." + topicName;
         if(partitionersByTopic.get(customPartitionerProperty) == null) {
+        	log.info("Getting the default partitioned");
             List<Partitioner> partitioners = new ArrayList<Partitioner>();
             if(partitioners.isEmpty()) {
                 return getDefaultPartitioner(job);
@@ -205,6 +209,7 @@ public class EtlMultiOutputFormat extends FileOutputFormat<EtlKey, Object> {
                 partitionersByTopic.put(customPartitionerProperty, partitioners.get(0));
             }
         }
+        log.info("Getting the customed partitioned");
         return partitionersByTopic.get(customPartitionerProperty);
     }
 

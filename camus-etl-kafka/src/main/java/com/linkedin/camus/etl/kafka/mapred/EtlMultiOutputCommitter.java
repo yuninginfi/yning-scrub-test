@@ -27,6 +27,7 @@ import com.linkedin.camus.etl.kafka.common.EtlKey;
 
 public class EtlMultiOutputCommitter extends FileOutputCommitter {
     private Pattern workingFileMetadataPattern;
+    private Pattern newWorkingFileMetadataPattern;
 
     private HashMap<String, EtlCounts> counts = new HashMap<String, EtlCounts>();
     private HashMap<String, EtlKey> offsets = new HashMap<String, EtlKey>();
@@ -62,6 +63,7 @@ public class EtlMultiOutputCommitter extends FileOutputCommitter {
             throw new IllegalStateException(e);
         }
         workingFileMetadataPattern = Pattern.compile("data\\.([^\\.]+)\\.([\\d_]+)\\.(\\d+)\\.([^\\.]+)-m-\\d+" + recordWriterProvider.getFilenameExtension());
+        newWorkingFileMetadataPattern = Pattern.compile("data\\.([^\\.]+)\\.([\\d_]+)\\.(\\d+)\\.([^\\.]+)\\.(\\d+)-m-\\d+" + recordWriterProvider.getFilenameExtension());
         this.log = log;
     }
 
@@ -72,10 +74,11 @@ public class EtlMultiOutputCommitter extends FileOutputCommitter {
         FileSystem fs = FileSystem.get(context.getConfiguration());
         if (EtlMultiOutputFormat.isRunMoveData(context)) {
             Path workPath = super.getWorkPath();
+            log.info("work path is " + workPath.toString());
             Path baseOutDir = EtlMultiOutputFormat.getDestinationPath(context);
             for (FileStatus f : fs.listStatus(workPath)) {
                 String file = f.getPath().getName();
-                log.info("File name is" + f.getPath() + file);
+                log.info("File name is" + f.getPath());
                 if (file.startsWith("data")) {
                     String workingFileName = file.substring(0, file.lastIndexOf("-m"));
                     EtlCounts count = counts.get(workingFileName);
@@ -126,18 +129,22 @@ public class EtlMultiOutputCommitter extends FileOutputCommitter {
     }
     
     protected void commitFile(JobContext job, Path source, Path target) throws IOException{
-      FileSystem.get(job.getConfiguration()).rename(source, target);
+    	log.info("Moving:" + source.getName() + " to " + target);
+        FileSystem.get(job.getConfiguration()).rename(source, target);
     }
 
     public String getPartitionedPath(JobContext context, String file, int count, long offset) throws IOException {
         Matcher m = workingFileMetadataPattern.matcher(file);
         if(! m.find()) {
-            throw new IOException("Could not extract metadata from working filename '" + file + "'");
+        	m = newWorkingFileMetadataPattern.matcher(file);
+        	if (! m.find())
+        		throw new IOException("Could not extract metadata from working filename '" + file + "'");
         }
         String topic = m.group(1);
         String leaderId = m.group(2);
         String partition = m.group(3);
         String encodedPartition = m.group(4);
+        String bucketId = m.group(5);
 
         String partitionedPath =
             EtlMultiOutputFormat.getPartitioner(context, topic).generatePartitionedPath(context, topic, leaderId,
@@ -148,6 +155,7 @@ public class EtlMultiOutputCommitter extends FileOutputCommitter {
                     "." + count+
                     "." + offset + 
                     "." + encodedPartition + 
+                    "." + bucketId +
                     recordWriterProvider.getFilenameExtension();
     }
 }
