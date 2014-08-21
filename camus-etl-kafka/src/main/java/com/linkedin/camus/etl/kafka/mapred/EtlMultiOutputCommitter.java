@@ -75,12 +75,18 @@ public class EtlMultiOutputCommitter extends FileOutputCommitter {
             Path baseOutDir = EtlMultiOutputFormat.getDestinationPath(context);
             for (FileStatus f : fs.listStatus(workPath)) {
                 String file = f.getPath().getName();
+                log.info("File name is" + f.getPath() + file);
                 if (file.startsWith("data")) {
                     String workingFileName = file.substring(0, file.lastIndexOf("-m"));
                     EtlCounts count = counts.get(workingFileName);
 
-                    String partitionedFile = getPartitionedPath(context, file,
+                    String partitionedFile = null;
+                    if(count != null) 	
+                    	partitionedFile = getPartitionedPath(context, file,
                             count.getEventCount(), count.getLastKey().getOffset());
+                    else
+                    	partitionedFile = getPartitionedPath(context, file,
+                                1, 100l);
 
                     Path dest = new Path(baseOutDir, partitionedFile);
 

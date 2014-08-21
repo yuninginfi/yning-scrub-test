@@ -2,7 +2,11 @@ package com.linkedin.camus.etl.kafka.mapred;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -10,11 +14,15 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.log4j.Logger;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.joda.time.DateTime;
 
 import com.linkedin.camus.coders.CamusWrapper;
 import com.linkedin.camus.etl.IEtlKey;
 import com.linkedin.camus.etl.RecordWriterProvider;
+import com.linkedin.camus.etl.kafka.coders.LatestSchemaKafkaAvroMessageDecoder;
 import com.linkedin.camus.etl.kafka.common.EtlKey;
 import com.linkedin.camus.etl.kafka.common.ExceptionWritable;
 
@@ -24,6 +32,7 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
   private Writer errorWriter = null;
   private String currentTopic = "";
   private long beginTimeStamp = 0;
+  private static Logger log = Logger.getLogger(EtlMultiOutputRecordWriter.class);
 
   private HashMap<String, RecordWriter<IEtlKey, CamusWrapper>> dataWriters =
       new HashMap<String, RecordWriter<IEtlKey, CamusWrapper>>();
@@ -94,11 +103,40 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
         committer.addCounts(key);
         CamusWrapper value = (CamusWrapper) val;
         String workingFileName = EtlMultiOutputFormat.getWorkingFileName(context, key);
+        log.info("Working file name is:" + workingFileName);
         if (!dataWriters.containsKey(workingFileName))
         {
           dataWriters.put(workingFileName, getDataRecordWriter(context, workingFileName, value));
         }
         dataWriters.get(workingFileName).write(key, value);
+        
+        //New output
+		if(key.getTopic().equals("partition_test"))
+		{
+			log.info("value is :" + value.getRecord().toString());
+			try {
+				EtlKey newKey = new EtlKey(key);
+				JSONObject obj = new JSONObject(value.getRecord().toString());
+				String timestampStr = obj.getString("timestamp");
+				Date timestamp = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(timestampStr);
+				newKey.setTime(timestamp.getTime());
+		        
+		        String newWorkingFileName = EtlMultiOutputFormat.getWorkingFileName(context, newKey);
+		        log.info("New working file name is:" + workingFileName);
+
+		        if (!dataWriters.containsKey(newWorkingFileName))
+		        {
+		          dataWriters.put(newWorkingFileName, getDataRecordWriter(context, newWorkingFileName, value));
+		        }
+		        dataWriters.get(newWorkingFileName).write(newKey, value);
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
       }
     }
     else if (val instanceof ExceptionWritable)

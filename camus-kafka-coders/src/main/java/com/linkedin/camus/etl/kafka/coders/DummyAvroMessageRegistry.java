@@ -11,6 +11,6 @@ public class DummyAvroMessageRegistry extends MemorySchemaRegistry<Schema>{
     public DummyAvroMessageRegistry() {
         super();
         super.register("DummyLog", SCHEMA$);
-        super.register("partition_test", SCHEMA2$);
+        super.register("partition_test", SCHEMA2$); 
     }
 }

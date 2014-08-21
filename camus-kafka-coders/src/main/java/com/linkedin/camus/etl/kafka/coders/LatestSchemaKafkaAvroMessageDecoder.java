@@ -20,19 +20,10 @@ public class LatestSchemaKafkaAvroMessageDecoder extends KafkaAvroMessageDecoder
 		{
 		    
 			GenericDatumReader<Record> reader = new GenericDatumReader<Record>();
-			log.info("Topic is :" + super.topicName);
 			Schema schema = super.registry.getLatestSchemaByTopic(super.topicName).getSchema();
-			log.info("Schema is:" + schema.toString());
 			reader.setSchema(schema);
 			Record a;
-			log.info("whole message is:" + new String(payload));
-			log.info("MagicOffset is:" + Message.MagicOffset());
-			log.info("Record is:" + new String(
-                                    payload, 
-                                    //Message.payloadOffset(message.magic()),
-                                    Message.MagicOffset(),
-                                    payload.length - Message.MagicOffset()
-                            ));
+			log.info("The message is:" + new String(payload));
 			return new CamusWrapper<Record>(reader.read(
                     null, 
                     decoderFactory.jsonDecoder(

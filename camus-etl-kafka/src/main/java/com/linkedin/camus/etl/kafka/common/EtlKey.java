@@ -50,6 +50,7 @@ public class EtlKey implements WritableComparable<EtlKey>, IEtlKey {
 		this.time = other.time;
 		this.server = other.server;
 		this.service = other.service;
+		this.leaderId = other.leaderId;
         this.partitionMap = new MapWritable(other.partitionMap);
 	}
 
