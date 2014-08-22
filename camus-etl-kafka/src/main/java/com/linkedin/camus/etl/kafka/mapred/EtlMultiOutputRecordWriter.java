@@ -23,6 +23,7 @@ import com.linkedin.camus.coders.CamusWrapper;
 import com.linkedin.camus.etl.IEtlKey;
 import com.linkedin.camus.etl.RecordWriterProvider;
 import com.linkedin.camus.etl.kafka.coders.LatestSchemaKafkaAvroMessageDecoder;
+import com.linkedin.camus.etl.kafka.coders.common.AdLogRecord;
 import com.linkedin.camus.etl.kafka.common.EtlKey;
 import com.linkedin.camus.etl.kafka.common.ExceptionWritable;
 
@@ -116,28 +117,22 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
 		{
 			CamusWrapper value = (CamusWrapper) val;
 			log.info("value is :" + value.getRecord().toString());
-			try {
-				EtlKey newKey = new EtlKey(key);
+			EtlKey newKey = new EtlKey(key);
 
-				JSONObject obj = new JSONObject(value.getRecord().toString());
-				String timestampStr = obj.getString("timestamp");
-				newKey.setOutputPartitionColumn(timestampStr);
-		        newKey.setOutputBucketingId(obj.getInt("bucketId"));
-		        log.info("bucketId is ===" + newKey.getOutputBucketingId());
-		        log.info("timestampStr is ===" + newKey.getOutputPartitionColumn());
-				committer.addCounts(newKey);
-		        String newWorkingFileName = EtlMultiOutputFormat.getWorkingFileName(context, newKey);
-		        log.info("New working file name is:" + newWorkingFileName);
+			AdLogRecord record = (AdLogRecord) value.getRecord();
+			newKey.setOutputPartitionColumn(record.getTimestamp());
+			newKey.setOutputBucketingId(Integer.valueOf(record.getBucketId()));
+			log.info("bucketId is ===" + newKey.getOutputBucketingId());
+			log.info("timestampStr is ===" + newKey.getOutputPartitionColumn());
+			committer.addCounts(newKey);
+			String newWorkingFileName = EtlMultiOutputFormat.getWorkingFileName(context, newKey);
+			log.info("New working file name is:" + newWorkingFileName);
 
-		        if (!dataWriters.containsKey(newWorkingFileName))
-		        {
-		          dataWriters.put(newWorkingFileName, getDataRecordWriter(context, newWorkingFileName, value));
-		        }
-		        dataWriters.get(newWorkingFileName).write(newKey, value);
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} 
+			if (!dataWriters.containsKey(newWorkingFileName))
+			{
+			  dataWriters.put(newWorkingFileName, getDataRecordWriter(context, newWorkingFileName, value));
+			}
+			dataWriters.get(newWorkingFileName).write(newKey, value); 
 		}
       }
     }

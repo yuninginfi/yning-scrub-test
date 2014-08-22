@@ -23,6 +23,7 @@ import com.linkedin.camus.etl.kafka.coders.TimestampBasedPartitioner;
 import com.linkedin.camus.etl.kafka.common.AvroRecordWriterProvider;
 import com.linkedin.camus.etl.kafka.common.DateUtils;
 import com.linkedin.camus.etl.kafka.common.EtlKey;
+import com.linkedin.camus.etl.kafka.common.SequenceFileRecordWriterProvider;
 
 /**
  * MultipleAvroOutputFormat.
@@ -83,7 +84,7 @@ public class EtlMultiOutputFormat extends FileOutputFormat<EtlKey, Object> {
             JobContext job) {
         return (Class<RecordWriterProvider>) job.getConfiguration()
                 .getClass(ETL_RECORD_WRITER_PROVIDER_CLASS,
-                        AvroRecordWriterProvider.class);
+                		SequenceFileRecordWriterProvider.class);
     }
     
     public static RecordWriterProvider getRecordWriterProvider(JobContext job) {
@@ -91,7 +92,7 @@ public class EtlMultiOutputFormat extends FileOutputFormat<EtlKey, Object> {
         {
           return (RecordWriterProvider) job.getConfiguration()
                    .getClass(ETL_RECORD_WRITER_PROVIDER_CLASS,
-                           AvroRecordWriterProvider.class).newInstance();
+                		   SequenceFileRecordWriterProvider.class).newInstance();
         }
         catch (Exception e)
         {
