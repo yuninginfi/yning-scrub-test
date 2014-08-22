@@ -86,6 +86,7 @@ public class CamusJob extends Configured implements Tool {
 	public static final String KAFKA_FETCH_REQUEST_CORRELATION_ID = "kafka.fetch.request.correlationid";
 	public static final String KAFKA_CLIENT_NAME = "kafka.client.name";
 	public static final String KAFKA_FETCH_BUFFER_SIZE = "kafka.fetch.buffer.size";
+	public static final String KAFKA_FETCH_MAX_ROWS = "kafka.fetch.max.rows";
 	public static final String KAFKA_BROKERS = "kafka.brokers";
 	public static final String KAFKA_HOST_URL = "kafka.host.url";
 	public static final String KAFKA_HOST_PORT = "kafka.host.port";
@@ -676,6 +677,12 @@ public class CamusJob extends Configured implements Tool {
 			}
 		}
 		return brokers;
+	}
+	
+	public static long getKafkaFetchMaxRows(JobContext job, String topic)
+	{
+		return job.getConfiguration().getLong(
+				KAFKA_FETCH_MAX_ROWS + "." + topic, -1);
 	}
 
 	public static int getKafkaFetchRequestCorrelationId(JobContext job) {

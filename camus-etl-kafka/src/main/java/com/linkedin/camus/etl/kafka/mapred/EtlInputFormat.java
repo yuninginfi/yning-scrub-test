@@ -362,6 +362,15 @@ public class EtlInputFormat extends InputFormat<EtlKey, CamusWrapper> {
 								request.getPartition(), 0, request
 										.getOffset()));
 			}
+			
+			//Control the size of the input
+			long maxRowsToWrite = CamusJob.getKafkaFetchMaxRows(context, request.getTopic());
+			long requestOffsetsLength = request.getLastOffset() - request.getOffset();
+		    
+			if(maxRowsToWrite != - 1 && requestOffsetsLength > maxRowsToWrite)
+			{
+				request.setLatestOffset(request.getOffset() + maxRowsToWrite);
+			}
 			log.info(request);
 		}
 

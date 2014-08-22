@@ -37,6 +37,7 @@ public class KafkaReader {
 	private long currentOffset;
 	private long lastOffset;
 	private long currentCount;
+	private long totalBytesRead;
 
 	private TaskAttemptContext context;
 
@@ -67,6 +68,7 @@ public class KafkaReader {
 		lastOffset = request.getLastOffset();
 		currentCount = 0;
 		totalFetchTime = 0;
+		totalBytesRead = 0;
 
 		// read data from queue
 
@@ -141,6 +143,9 @@ public class KafkaReader {
 	 */
 
 	public boolean fetch() throws IOException {
+		log.info(currentOffset + ":" + lastOffset);
+		log.info("Total bytes fetched:" + totalBytesRead);
+
 		if (currentOffset >= lastOffset) {
 			return false;
 		}
@@ -172,6 +177,7 @@ public class KafkaReader {
 			} else {
 				ByteBufferMessageSet messageBuffer = fetchResponse.messageSet(
 						kafkaRequest.getTopic(), kafkaRequest.getPartition());
+				totalBytesRead += messageBuffer.sizeInBytes();
 				lastFetchTime = (System.currentTimeMillis() - tempTime);
 				log.debug("Time taken to fetch : "
 						+ (lastFetchTime / 1000) + " seconds");
