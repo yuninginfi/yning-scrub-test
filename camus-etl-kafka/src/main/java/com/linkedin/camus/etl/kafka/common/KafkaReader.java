@@ -37,7 +37,6 @@ public class KafkaReader {
 	private long currentOffset;
 	private long lastOffset;
 	private long currentCount;
-	private long totalBytesRead;
 
 	private TaskAttemptContext context;
 
@@ -68,15 +67,10 @@ public class KafkaReader {
 		lastOffset = request.getLastOffset();
 		currentCount = 0;
 		totalFetchTime = 0;
-		totalBytesRead = 0;
 
 		// read data from queue
 
 		URI uri = kafkaRequest.getURI();
-		log.info(uri.getHost() + " " +  uri.getPort() + " " + 
-				CamusJob.getKafkaTimeoutValue(context) + " " +
-				CamusJob.getKafkaBufferSize(context) + " " + 
-				CamusJob.getKafkaClientName(context));
 		simpleConsumer = new SimpleConsumer(uri.getHost(), uri.getPort(),
 				CamusJob.getKafkaTimeoutValue(context),
 				CamusJob.getKafkaBufferSize(context),
@@ -106,7 +100,6 @@ public class KafkaReader {
 	 * @throws IOException
 	 */
 	public boolean getNext(EtlKey key, BytesWritable payload ,BytesWritable pKey) throws IOException {
-		log.info("calling getNext!");
 		if (hasNext()) {
 
 			MessageAndOffset msgAndOffset = messageIter.next();
@@ -148,26 +141,19 @@ public class KafkaReader {
 	 */
 
 	public boolean fetch() throws IOException {
-
-		log.info(currentOffset + " " + lastOffset);
 		if (currentOffset >= lastOffset) {
 			return false;
 		}
 		long tempTime = System.currentTimeMillis();
 		TopicAndPartition topicAndPartition = new TopicAndPartition(
 				kafkaRequest.getTopic(), kafkaRequest.getPartition());
-		log.info("Asking for offset : " + (currentOffset));
+		log.debug("\nAsking for offset : " + (currentOffset));
 		PartitionFetchInfo partitionFetchInfo = new PartitionFetchInfo(
 				currentOffset, fetchBufferSize);
 
 		HashMap<TopicAndPartition, PartitionFetchInfo> fetchInfo = new HashMap<TopicAndPartition, PartitionFetchInfo>();
 		fetchInfo.put(topicAndPartition, partitionFetchInfo);
 
-		log.info(CamusJob.getKafkaFetchRequestCorrelationId(context) + " " + 
-				CamusJob.getKafkaClientName(context) + " " + 
-				CamusJob.getKafkaFetchRequestMaxWait(context) + " " + 
-				CamusJob.getKafkaFetchRequestMinBytes(context) + " " + fetchInfo);
-		
 		FetchRequest fetchRequest = new FetchRequest(
 				CamusJob.getKafkaFetchRequestCorrelationId(context),
 				CamusJob.getKafkaClientName(context),
@@ -184,15 +170,12 @@ public class KafkaReader {
 								kafkaRequest.getPartition()));
 				return false;
 			} else {
-				log.info(kafkaRequest.getTopic() + ":" + kafkaRequest.getPartition());
 				ByteBufferMessageSet messageBuffer = fetchResponse.messageSet(
 						kafkaRequest.getTopic(), kafkaRequest.getPartition());
-				totalBytesRead += messageBuffer.sizeInBytes();
-				log.info(messageBuffer.toString());
 				lastFetchTime = (System.currentTimeMillis() - tempTime);
-				log.info("Time taken to fetch : "
+				log.debug("Time taken to fetch : "
 						+ (lastFetchTime / 1000) + " seconds");
-				log.info("The size of the ByteBufferMessageSet returned is : " + messageBuffer.sizeInBytes());
+				log.debug("The size of the ByteBufferMessageSet returned is : " + messageBuffer.sizeInBytes());
 				int skipped = 0;
 				totalFetchTime += lastFetchTime;
 				messageIter = messageBuffer.iterator();
@@ -202,21 +185,20 @@ public class KafkaReader {
 				MessageAndOffset message = null;
 				while (messageIter2.hasNext()) {
 					message = messageIter2.next();
-					log.info(message.toString());
 					if (message.offset() < currentOffset) {
 						//flag = true;
 						skipped++;
 					} else {
-						log.info("Skipped offsets till : "
+						log.debug("Skipped offsets till : "
 								+ message.offset());
 						break;
 					}
 				}
-				log.info("Number of offsets to be skipped: " + skipped);
+				log.debug("Number of offsets to be skipped: " + skipped);
 				while(skipped !=0 )
 				{
 					MessageAndOffset skippedMessage = messageIter.next();
-					log.info("Skipping offset : " + skippedMessage.offset());
+					log.debug("Skipping offset : " + skippedMessage.offset());
 					skipped --;
 				}
 
@@ -227,7 +209,6 @@ public class KafkaReader {
 					return false;
 				}
 
-				log.info("Returnning true");
 				return true;
 			}
 		} catch (Exception e) {

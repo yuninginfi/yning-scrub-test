@@ -10,6 +10,9 @@ public class TestJsonStringMessageDecoder {
 
     @Test
     public void testDecodeUnixMilliseconds() {
+    	
+    	long result = Long.valueOf("782218961286997485");
+    	System.out.println(result);
 
         // Test that the decoder extracts unix_milliseconds
         // It should take and return milliseconds

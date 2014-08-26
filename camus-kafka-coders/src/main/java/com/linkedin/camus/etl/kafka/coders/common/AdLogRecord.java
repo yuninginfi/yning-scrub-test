@@ -10,7 +10,7 @@ public class AdLogRecord implements ETLRecord {
 		String[] fields = row.split("\t");
 		eventType = "topic_" + String.valueOf(Long.valueOf(fields[5]) % 10);
 		timestamp = fields[5];
-		bucketId = String.valueOf(Integer.valueOf(fields[0]) % 64);
+		bucketId = String.valueOf(Long.valueOf(fields[3]) % 64);
 		extraColumn = row.substring(eventType.length() + timestamp.length() + bucketId.length() + 3);
 	}
 

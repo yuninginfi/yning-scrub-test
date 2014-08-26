@@ -18,7 +18,6 @@ public class TimestampBasedPartitioner extends DefaultPartitioner{
 	
 	@Override
 	public String encodePartition(JobContext context, IEtlKey key) {
-		log.info("encoding:" + key.getOutputPartitionColumn());
         long outfilePartitionMs = EtlMultiOutputFormat.getEtlOutputFileTimePartitionMins(context) * 60000L;
         return ""+DateUtils.getPartition(outfilePartitionMs, Long.valueOf(key.getOutputPartitionColumn()), outputDateFormatter.getZone());
     }

@@ -116,7 +116,6 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
         //New output
 
 		CamusWrapper value = (CamusWrapper) val;
-		log.info("value is :" + value.getRecord().toString());
 		EtlOutputKey newKey = new EtlOutputKey(key);
 		if(key.getTopic().equals("partition_test"))
 		{
@@ -125,9 +124,6 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
 			newKey.setOutputPartitionColumn(record.getTimestamp());
 			newKey.setOutputBucketingId(Integer.valueOf(record.getBucketId()));
 			newKey.setOutputTopic(record.getEventType());
-			log.info("bucketId is ===" + newKey.getOutputBucketingId());
-			log.info("timestampStr is ===" + newKey.getOutputPartitionColumn());
-			log.info("eventType is ===" + newKey.getOutputTopic());
 			committer.addCounts(newKey);
 			String newWorkingFileName = EtlMultiOutputFormat.getWorkingFileName(context, newKey);
 
@@ -144,14 +140,12 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
 			newKey.setOutputPartitionColumn(record.getTimestamp());
 			newKey.setOutputBucketingId(Integer.valueOf(record.getBucketId()));
 			newKey.setOutputTopic(record.getEventType());
-			log.info("bucketId is ===" + newKey.getOutputBucketingId());
-			log.info("timestampStr is ===" + newKey.getOutputPartitionColumn());
-			log.info("eventType is ===" + newKey.getOutputTopic());
 			committer.addCounts(newKey);
 			String newWorkingFileName = EtlMultiOutputFormat.getWorkingFileName(context, newKey);
 
 			if (!dataWriters.containsKey(newWorkingFileName))
 			{
+			  log.info("NewWorkingFileName does not exist. Creating recordWriter for " + newWorkingFileName);
 			  dataWriters.put(newWorkingFileName, getDataRecordWriter(context, newWorkingFileName, value));
 			}
 			dataWriters.get(newWorkingFileName).write(newKey, value); 

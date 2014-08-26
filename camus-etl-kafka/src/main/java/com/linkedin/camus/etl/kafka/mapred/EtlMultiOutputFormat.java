@@ -200,15 +200,13 @@ public class EtlMultiOutputFormat extends FileOutputFormat<EtlKey, Object> {
     public static Partitioner getPartitioner(JobContext job, String topicName) throws IOException {
         String customPartitionerProperty = ETL_DEFAULT_PARTITIONER_CLASS + "." + topicName;
         if(partitionersByTopic.get(customPartitionerProperty) == null) {
-        	log.info("Getting the default partitioned");
-            List<Partitioner> partitioners = new ArrayList<Partitioner>();
+        	List<Partitioner> partitioners = new ArrayList<Partitioner>();
             if(partitioners.isEmpty()) {
                 return getDefaultPartitioner(job);
             } else {
                 partitionersByTopic.put(customPartitionerProperty, partitioners.get(0));
             }
         }
-        log.info("Getting the customed partitioned");
         return partitionersByTopic.get(customPartitionerProperty);
     }
 
