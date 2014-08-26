@@ -5,12 +5,13 @@ public class AdLogRecord implements ETLRecord {
 	private String timestamp;
 	private String bucketId;
 	private String extraColumn;
-
-	public AdLogRecord(String[] fields) {
-		eventType = fields[0];
-		timestamp = fields[1];
-		bucketId = fields[2];
-		extraColumn = fields[3];
+	
+	public AdLogRecord(String row) {
+		String[] fields = row.split("\t");
+		eventType = "topic_" + String.valueOf(Long.valueOf(fields[5]) % 10);
+		timestamp = fields[5];
+		bucketId = String.valueOf(Integer.valueOf(fields[0]) % 64);
+		extraColumn = row.substring(eventType.length() + timestamp.length() + bucketId.length() + 3);
 	}
 
 	public String getEventType() {

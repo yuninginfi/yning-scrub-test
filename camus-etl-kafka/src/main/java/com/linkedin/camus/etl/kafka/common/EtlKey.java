@@ -21,16 +21,16 @@ public class EtlKey implements WritableComparable<EtlKey>, IEtlKey {
     public static final Text SERVICE = new Text("service");
     public static EtlKey DUMMY_KEY = new EtlKey();
     
-    private String leaderId = "";
-	private int partition = 0;
-	private long beginOffset = 0;
-	private long offset = 0;
-	private long checksum = 0;
-	private String topic = "";
-	private long time = 0;
-	private String server = "";
-	private String service = "";
-    private MapWritable partitionMap = new MapWritable();
+    protected String leaderId = "";
+	protected int partition = 0;
+	protected long beginOffset = 0;
+	protected long offset = 0;
+	protected long checksum = 0;
+	protected String topic = "";
+	protected long time = 0;
+	protected String server = "";
+	protected String service = "";
+    protected MapWritable partitionMap = new MapWritable();
 
 
 	/**
@@ -51,8 +51,6 @@ public class EtlKey implements WritableComparable<EtlKey>, IEtlKey {
 		this.server = other.server;
 		this.service = other.service;
 		this.leaderId = other.leaderId;
-		this.outputBucketingId = other.outputBucketingId;
-		this.outputPartitionColumn = other.outputPartitionColumn;
         this.partitionMap = new MapWritable(other.partitionMap);
 	}
 
@@ -235,10 +233,6 @@ public class EtlKey implements WritableComparable<EtlKey>, IEtlKey {
         builder.append(checksum);
         builder.append(" time=");
         builder.append(time);
-        builder.append(" outputPartitionColumn=");
-        builder.append(outputPartitionColumn);
-        builder.append(" outputBucketingId=");
-        builder.append(outputBucketingId);
 
         for (Map.Entry<Writable, Writable> e: partitionMap.entrySet()) {
             builder.append(" " + e.getKey() + "=");
@@ -248,25 +242,21 @@ public class EtlKey implements WritableComparable<EtlKey>, IEtlKey {
         return builder.toString();
 	}
 
-	String outputPartitionColumn;
-
-	int outputBucketingId;
-	
 	@Override
 	public String getOutputPartitionColumn() {
-		return outputPartitionColumn;
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	@Override
 	public int getOutputBucketingId() {
-		return outputBucketingId;
-	}
-	
-	public void setOutputPartitionColumn(String outputPartitionColumn) {
-		this.outputPartitionColumn = outputPartitionColumn;
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
-	public void setOutputBucketingId(int outputBucketingId) {
-		this.outputBucketingId = outputBucketingId;
+	@Override
+	public String getOutputTopic() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

@@ -25,6 +25,7 @@ import com.linkedin.camus.etl.RecordWriterProvider;
 import com.linkedin.camus.etl.kafka.coders.LatestSchemaKafkaAvroMessageDecoder;
 import com.linkedin.camus.etl.kafka.coders.common.AdLogRecord;
 import com.linkedin.camus.etl.kafka.common.EtlKey;
+import com.linkedin.camus.etl.kafka.common.EtlOutputKey;
 import com.linkedin.camus.etl.kafka.common.ExceptionWritable;
 
 public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
@@ -113,20 +114,41 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
         dataWriters.get(workingFileName).write(key, value);
         */
         //New output
+
+		CamusWrapper value = (CamusWrapper) val;
+		log.info("value is :" + value.getRecord().toString());
+		EtlOutputKey newKey = new EtlOutputKey(key);
 		if(key.getTopic().equals("partition_test"))
 		{
-			CamusWrapper value = (CamusWrapper) val;
-			log.info("value is :" + value.getRecord().toString());
-			EtlKey newKey = new EtlKey(key);
 
 			AdLogRecord record = (AdLogRecord) value.getRecord();
 			newKey.setOutputPartitionColumn(record.getTimestamp());
 			newKey.setOutputBucketingId(Integer.valueOf(record.getBucketId()));
+			newKey.setOutputTopic(record.getEventType());
 			log.info("bucketId is ===" + newKey.getOutputBucketingId());
 			log.info("timestampStr is ===" + newKey.getOutputPartitionColumn());
+			log.info("eventType is ===" + newKey.getOutputTopic());
 			committer.addCounts(newKey);
 			String newWorkingFileName = EtlMultiOutputFormat.getWorkingFileName(context, newKey);
-			log.info("New working file name is:" + newWorkingFileName);
+
+			if (!dataWriters.containsKey(newWorkingFileName))
+			{
+			  dataWriters.put(newWorkingFileName, getDataRecordWriter(context, newWorkingFileName, value));
+			}
+			dataWriters.get(newWorkingFileName).write(newKey, value); 
+		}
+		else if("AdBeaconServer".equals(key.getTopic()))
+		{
+
+			AdLogRecord record = (AdLogRecord) value.getRecord();
+			newKey.setOutputPartitionColumn(record.getTimestamp());
+			newKey.setOutputBucketingId(Integer.valueOf(record.getBucketId()));
+			newKey.setOutputTopic(record.getEventType());
+			log.info("bucketId is ===" + newKey.getOutputBucketingId());
+			log.info("timestampStr is ===" + newKey.getOutputPartitionColumn());
+			log.info("eventType is ===" + newKey.getOutputTopic());
+			committer.addCounts(newKey);
+			String newWorkingFileName = EtlMultiOutputFormat.getWorkingFileName(context, newKey);
 
 			if (!dataWriters.containsKey(newWorkingFileName))
 			{

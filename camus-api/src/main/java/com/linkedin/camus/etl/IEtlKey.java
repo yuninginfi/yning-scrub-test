@@ -22,6 +22,8 @@ public interface IEtlKey {
 
     long getChecksum();
     
+    String getOutputTopic();
+    
     String getOutputPartitionColumn();
     
     int getOutputBucketingId();

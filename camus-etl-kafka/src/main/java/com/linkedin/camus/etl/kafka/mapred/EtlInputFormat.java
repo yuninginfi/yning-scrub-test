@@ -408,8 +408,6 @@ public class EtlInputFormat extends InputFormat<EtlKey, CamusWrapper> {
 
 	private List<InputSplit> allocateWork(List<EtlRequest> requests,
 			JobContext context) throws IOException {
-		log.info("Request number is:" + requests.size());
-		log.info("aaaaa:" + requests.toString());
 		int numTasks = context.getConfiguration()
 				.getInt("mapred.map.tasks", 30);
 		// Reverse sort by size

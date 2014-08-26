@@ -18,9 +18,7 @@ import org.joda.time.format.DateTimeFormatter;
 
 import com.linkedin.camus.coders.Partitioner;
 import com.linkedin.camus.etl.RecordWriterProvider;
-import com.linkedin.camus.etl.kafka.coders.DefaultPartitioner;
 import com.linkedin.camus.etl.kafka.coders.TimestampBasedPartitioner;
-import com.linkedin.camus.etl.kafka.common.AvroRecordWriterProvider;
 import com.linkedin.camus.etl.kafka.common.DateUtils;
 import com.linkedin.camus.etl.kafka.common.EtlKey;
 import com.linkedin.camus.etl.kafka.common.SequenceFileRecordWriterProvider;
@@ -80,7 +78,8 @@ public class EtlMultiOutputFormat extends FileOutputFormat<EtlKey, Object> {
         job.getConfiguration().setClass(ETL_RECORD_WRITER_PROVIDER_CLASS, recordWriterProviderClass, RecordWriterProvider.class);
     }
 
-    public static Class<RecordWriterProvider> getRecordWriterProviderClass(
+    @SuppressWarnings("unchecked")
+	public static Class<RecordWriterProvider> getRecordWriterProviderClass(
             JobContext job) {
         return (Class<RecordWriterProvider>) job.getConfiguration()
                 .getClass(ETL_RECORD_WRITER_PROVIDER_CLASS,
@@ -185,10 +184,9 @@ public class EtlMultiOutputFormat extends FileOutputFormat<EtlKey, Object> {
     }
 
     public static String getWorkingFileName(JobContext context, EtlKey key) throws IOException {
-    	log.info(key.getOutputBucketingId() + ":" + key.getOutputPartitionColumn());
         Partitioner partitioner = getPartitioner(context, key.getTopic());
         
-        return "data." + key.getTopic().replaceAll("\\.", "_") + "." + key.getLeaderId() + "." + key.getPartition() + "." + partitioner.encodePartition(context, key) + "." + key.getOutputBucketingId();
+        return "data." + key.getOutputTopic().replaceAll("\\.", "_") + "." + key.getLeaderId() + "." + key.getPartition() + "." + partitioner.encodePartition(context, key) + "." + key.getOutputBucketingId();
     }
     
     public static void setDefaultPartitioner(JobContext job, Class<?> cls) {
