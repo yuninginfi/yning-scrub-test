@@ -14,6 +14,9 @@ public class AdLogRecord implements ETLRecord {
 		extraColumn = row;
 	}
 
+	public AdLogRecord() {
+	}
+
 	public String getEventType() {
 		return eventType;
 	}
@@ -58,6 +61,14 @@ public class AdLogRecord implements ETLRecord {
 		timestamp = fields[1];
 		bucketId = fields[2];
 		extraColumn = fields[3];
+	}
+
+	public void setMessage(String kafkaMessage) {
+		String[] fields = kafkaMessage.split("\t");
+		eventType = "topic_" + String.valueOf(Long.valueOf(fields[5]) % 10);
+		timestamp = fields[5];
+		bucketId = String.valueOf(Math.abs(Long.valueOf(fields[3])) % 64);
+		extraColumn = kafkaMessage;
 	}
 
 }

@@ -10,11 +10,11 @@ import com.linkedin.camus.etl.kafka.coders.common.ETLRecord;
 public class KafkaTabSeperatedStringDecoder extends MessageDecoder<byte[], ETLRecord>{
 
 	private static Logger log = Logger.getLogger(KafkaTabSeperatedStringDecoder.class);
+	private static AdLogRecord record = new AdLogRecord();
+	
 	@Override
 	public CamusWrapper<ETLRecord> decode(byte[] message) {
-		String kafkaMessage = new String(message);
-		String fields[] = kafkaMessage.split("\t");
-		AdLogRecord record = new AdLogRecord(kafkaMessage);
+		record.setMessage(new String(message));
 		return new CamusWrapper<ETLRecord>(record);
 	}
 
