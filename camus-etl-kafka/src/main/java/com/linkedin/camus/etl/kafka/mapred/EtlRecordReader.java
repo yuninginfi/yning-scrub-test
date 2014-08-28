@@ -46,6 +46,7 @@ public class EtlRecordReader extends RecordReader<EtlKey, CamusWrapper> {
     private CamusWrapper value;
 
     private int maxPullHours = 0;
+    private int maxOpenFiles = 0;
     private int exceptionCount = 0;
     private long maxPullTime = 0;
     private long beginTimeStamp = 0;
@@ -102,6 +103,8 @@ public class EtlRecordReader extends RecordReader<EtlKey, CamusWrapper> {
         } else {
             beginTimeStamp = 0;
         }
+        
+        maxOpenFiles = CamusJob.getMaxOpenFileWritter(context);
         
         ignoreServerServiceList = new HashSet<String>();
         for(String ignoreServerServiceTopic : EtlInputFormat.getEtlAuditIgnoreServiceTopicList(context))
@@ -183,6 +186,15 @@ public class EtlRecordReader extends RecordReader<EtlKey, CamusWrapper> {
 
         Message message = null;
 
+        if(context.getCounter("total", "open-file").getValue() >= maxOpenFiles)
+        {
+        	log.info("Reached max open file, stoping reading....");
+        	if (reader != null) {
+                closeReader();
+            }
+            return false;
+        }
+        
         // we only pull for a specified time. unfinished work will be
         // rescheduled in the next
         // run.

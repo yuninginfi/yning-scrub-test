@@ -146,6 +146,8 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
 			if (!dataWriters.containsKey(newWorkingFileName))
 			{
 			  log.info("NewWorkingFileName does not exist. Creating recordWriter for " + newWorkingFileName);
+			  context.getCounter("total", "open-file").increment(1);
+			  log.info("Current # of open files is:" + context.getCounter("total", "open-file").getValue());
 			  dataWriters.put(newWorkingFileName, getDataRecordWriter(context, newWorkingFileName, value));
 			}
 			dataWriters.get(newWorkingFileName).write(newKey, value); 

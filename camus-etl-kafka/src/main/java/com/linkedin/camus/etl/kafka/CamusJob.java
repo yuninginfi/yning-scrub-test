@@ -92,6 +92,7 @@ public class CamusJob extends Configured implements Tool {
 	public static final String KAFKA_HOST_PORT = "kafka.host.port";
 	public static final String KAFKA_TIMEOUT_VALUE = "kafka.timeout.value";
 	public static final String LOG4J_CONFIGURATION = "log4j.configuration";
+	public static final String MAX_OPEN_FILE_WRITTER = "max.open.file.writter";
 	private static org.apache.log4j.Logger log;
 
 	private final Properties props;
@@ -677,6 +678,11 @@ public class CamusJob extends Configured implements Tool {
 			}
 		}
 		return brokers;
+	}
+	
+	public static int getMaxOpenFileWritter(JobContext job)
+	{
+		return job.getConfiguration().getInt(MAX_OPEN_FILE_WRITTER, 1300);
 	}
 	
 	public static long getKafkaFetchMaxRows(JobContext job, String topic)
