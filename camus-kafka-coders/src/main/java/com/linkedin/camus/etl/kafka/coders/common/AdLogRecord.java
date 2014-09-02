@@ -8,7 +8,7 @@ public class AdLogRecord implements ETLRecord {
 	
 	public AdLogRecord(String row) {
 		String[] fields = row.split("\t");
-		eventType = "topic_" + String.valueOf(Long.valueOf(fields[5]) % 10);
+		eventType = "topic_" + String.valueOf(Long.valueOf(fields[1]) % 10);
 		timestamp = fields[5];
 		bucketId = String.valueOf(Math.abs(Long.valueOf(fields[3])) % 64);
 		extraColumn = row;
