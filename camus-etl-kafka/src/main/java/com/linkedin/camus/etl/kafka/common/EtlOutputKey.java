@@ -1,9 +1,11 @@
 package com.linkedin.camus.etl.kafka.common;
 
+import java.util.List;
+
 import org.apache.hadoop.io.MapWritable;
 
 public class EtlOutputKey extends EtlKey{
-	String outputTopic;
+	List<String> outputTopic;
 	String outputPartitionColumn;
 	int outputBucketingId;
 
@@ -21,11 +23,11 @@ public class EtlOutputKey extends EtlKey{
 	}
 	
     @Override
-	public String getOutputTopic() {
+	public List<String> getOutputTopics() {
 		return outputTopic;
 	}
 
-	public void setOutputTopic(String outputTopic) {
+	public void setOutputTopic(List<String> outputTopic) {
 		this.outputTopic = outputTopic;
 	}
 	

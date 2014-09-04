@@ -63,6 +63,11 @@
 			</exclusions>
 		</dependency>
 		<dependency>
+         <groupId>com.rocketfuel.grid.common</groupId>
+         <artifactId>grid.common</artifactId>
+         <version>[6.90.0,6.91.0)</version>
+        </dependency>
+		<dependency>
 			<groupId>org.scala-lang</groupId>
 			<artifactId>scala-library</artifactId>
 		</dependency>

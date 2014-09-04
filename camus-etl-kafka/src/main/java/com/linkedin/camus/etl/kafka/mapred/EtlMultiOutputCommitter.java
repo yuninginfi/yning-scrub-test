@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,12 +38,14 @@ public class EtlMultiOutputCommitter extends FileOutputCommitter {
     private Logger log;
 
     public void addCounts(EtlKey key) throws IOException {
-        String workingFileName = EtlMultiOutputFormat.getWorkingFileName(context, key);
-        if (!counts.containsKey(workingFileName))
-            counts.put(workingFileName, new EtlCounts(key.getTopic(),
-            EtlMultiOutputFormat.getMonitorTimeGranularityMs(context)));
-        counts.get(workingFileName).incrementMonitorCount(key);
-        addOffset(key);
+        List<String> workingFileNames = EtlMultiOutputFormat.getWorkingFileNames(context, key);
+        for(String workingFileName:workingFileNames) {
+	        if (!counts.containsKey(workingFileName))
+	            counts.put(workingFileName, new EtlCounts(key.getTopic(),
+	            EtlMultiOutputFormat.getMonitorTimeGranularityMs(context)));
+	        counts.get(workingFileName).incrementMonitorCount(key);
+	        addOffset(key);
+        }
     }
 
     public void addOffset(EtlKey key) {

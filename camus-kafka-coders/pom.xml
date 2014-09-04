@@ -31,6 +31,11 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+         <groupId>com.rocketfuel.grid.common</groupId>
+         <artifactId>grid.common</artifactId>
+         <version>[6.90.0,6.91.0)</version>
+        </dependency>
 	</dependencies>
 
 </project>

@@ -3,6 +3,7 @@ package com.linkedin.camus.etl.kafka.common;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import com.linkedin.camus.etl.IEtlKey;
@@ -255,7 +256,7 @@ public class EtlKey implements WritableComparable<EtlKey>, IEtlKey {
 	}
 
 	@Override
-	public String getOutputTopic() {
+	public List<String> getOutputTopics() {
 		// TODO Auto-generated method stub
 		return null;
 	}

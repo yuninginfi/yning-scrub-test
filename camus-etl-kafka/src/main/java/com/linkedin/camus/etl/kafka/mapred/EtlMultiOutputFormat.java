@@ -183,11 +183,20 @@ public class EtlMultiOutputFormat extends FileOutputFormat<EtlKey, Object> {
         job.getConfiguration().setBoolean(ETL_RUN_TRACKING_POST, value);
     }
 
-    public static String getWorkingFileName(JobContext context, EtlKey key) throws IOException {
+    public static List<String> getWorkingFileNames(JobContext context, EtlKey key) throws IOException {
         Partitioner partitioner = getPartitioner(context, key.getTopic());
+        List<String> result = new ArrayList<String>();
         
-        return "data." + key.getOutputTopic().replaceAll("\\.", "_") + "." + key.getLeaderId() + "." + key.getPartition() + "." + partitioner.encodePartition(context, key) + "." + key.getOutputBucketingId();
-    }
+		for (String tableName : key.getOutputTopics()) {
+			result.add("data." + tableName.replaceAll("\\.", "_") + "."
+					+ key.getLeaderId() + "." + key.getPartition() + "."
+					+ partitioner.encodePartition(context, key) + "."
+					+ key.getOutputBucketingId());
+		}
+		return result;
+	}
+    
+    
     
     public static void setDefaultPartitioner(JobContext job, Class<?> cls) {
       job.getConfiguration().setClass(ETL_DEFAULT_PARTITIONER_CLASS, cls, Partitioner.class);

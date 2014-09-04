@@ -1,5 +1,7 @@
 package com.linkedin.camus.etl;
 
+import java.util.List;
+
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Writable;
 
@@ -22,7 +24,7 @@ public interface IEtlKey {
 
     long getChecksum();
     
-    String getOutputTopic();
+    List<String> getOutputTopics();
     
     String getOutputPartitionColumn();
     
