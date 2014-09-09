@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Writable;
 
+
 public interface IEtlKey {
     String getServer();
 
@@ -23,14 +24,10 @@ public interface IEtlKey {
     long getOffset();
 
     long getChecksum();
-    
-    List<String> getOutputTopics();
-    
-    String getOutputPartitionColumn();
-    
-    int getOutputBucketingId();
 
     MapWritable getPartitionMap();
 
     void put(Writable key, Writable value);
+
+	List<AdLogOutput> getOutputs();
 }

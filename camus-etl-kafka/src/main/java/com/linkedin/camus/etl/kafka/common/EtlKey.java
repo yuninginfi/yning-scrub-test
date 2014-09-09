@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.linkedin.camus.etl.AdLogOutput;
 import com.linkedin.camus.etl.IEtlKey;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
@@ -243,21 +244,9 @@ public class EtlKey implements WritableComparable<EtlKey>, IEtlKey {
         return builder.toString();
 	}
 
-	@Override
-	public String getOutputPartitionColumn() {
-		// TODO Auto-generated method stub
+    @Override
+    public List<AdLogOutput> getOutputs()
+    {
 		return null;
-	}
-
-	@Override
-	public int getOutputBucketingId() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public List<String> getOutputTopics() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    }
 }

@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -22,6 +23,7 @@ import org.codehaus.jettison.json.JSONObject;
 import org.joda.time.DateTime;
 
 import com.linkedin.camus.coders.CamusWrapper;
+import com.linkedin.camus.etl.AdLogOutput;
 import com.linkedin.camus.etl.IEtlKey;
 import com.linkedin.camus.etl.RecordWriterProvider;
 import com.linkedin.camus.etl.kafka.coders.LatestSchemaKafkaAvroMessageDecoder;
@@ -42,7 +44,10 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
   private Writer errorWriter = null;
   private String currentTopic = "";
   private long beginTimeStamp = 0;
+  private long milisecondsInDay = 86400000l;
   private static Logger log = Logger.getLogger(EtlMultiOutputRecordWriter.class);
+  
+  private Map<String, Integer> tableBucketsMap= new HashMap<String, Integer>(){{put("cookie_matching",64);put("cookie",64);put("actions",64);}};
 
   private HashMap<String, RecordWriter<IEtlKey, CamusWrapper>> dataWriters =
       new HashMap<String, RecordWriter<IEtlKey, CamusWrapper>>();
@@ -86,98 +91,94 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
     errorWriter.close();
   }
 
-  @Override
-  public void write(EtlKey key, Object val) throws IOException,
-      InterruptedException
-  {
-    if (val instanceof CamusWrapper<?>)
-    {
-      if (key.getTime() < beginTimeStamp)
-      {
-        // ((Mapper.Context)context).getCounter("total",
-        // "skip-old").increment(1);
-        committer.addOffset(key);
-      }
-      else
-      {
-        if (!key.getTopic().equals(currentTopic))
-        {
-          for (RecordWriter<IEtlKey, CamusWrapper> writer : dataWriters.values())
-          {
-            writer.close(context);
-          }
-          dataWriters.clear();
-          currentTopic = key.getTopic();
-        }
-         /*
-        committer.addCounts(key);
-        
-        
-        String workingFileName = EtlMultiOutputFormat.getWorkingFileName(context, key);
-        log.info("Working file name is:" + workingFileName);
-        if (!dataWriters.containsKey(workingFileName))
-        {
-          dataWriters.put(workingFileName, getDataRecordWriter(context, workingFileName, value));
-        }
-        dataWriters.get(workingFileName).write(key, value);
-        */
-        //New output
-
-		CamusWrapper value = (CamusWrapper) val;
-		EtlOutputKey newKey = new EtlOutputKey(key);
-		/*
-		if(key.getTopic().equals("partition_test"))
-		{
-
-			AdLogRecord record = (AdLogRecord) value.getRecord();
-			newKey.setOutputPartitionColumn(record.getTimestamp());
-			newKey.setOutputBucketingId(Integer.valueOf(record.getBucketId()));
-			newKey.setOutputTopic(record.getEventType());
-			committer.addCounts(newKey);
-			String newWorkingFileName = EtlMultiOutputFormat.getWorkingFileName(context, newKey);
-
-			if (!dataWriters.containsKey(newWorkingFileName))
-			{
-			  dataWriters.put(newWorkingFileName, getDataRecordWriter(context, newWorkingFileName, value));
-			}
-			dataWriters.get(newWorkingFileName).write(newKey, value); 
-		}
-		else */
-		if("AdBeaconServer".equals(key.getTopic()))
-		{
-
-			AdLogRecord record = (AdLogRecord) value.getRecord();
-			newKey.setOutputPartitionColumn(record.getColumn(AdLogRecord.Fields.SERVER_TIMESTAMP));
-			newKey.setOutputBucketingId(Math.abs((int) (Long.valueOf(record.getColumn(AdLogRecord.Fields.USER_ID)) % 64)));
-			newKey.setOutputTopic(getOutputTables(record));
-			committer.addCounts(newKey);
-			List<String> newWorkingFileNames = EtlMultiOutputFormat.getWorkingFileNames(context, newKey);
-			for(String newWorkingFileName:newWorkingFileNames)
-			{
-				if (!dataWriters.containsKey(newWorkingFileName))
-				{
-				  log.info("NewWorkingFileName does not exist. Creating recordWriter for " + newWorkingFileName);
-				  context.getCounter("total", "open-file").increment(1);
-				  log.info("Current # of open files is:" + context.getCounter("total", "open-file").getValue());
-				  dataWriters.put(newWorkingFileName, getDataRecordWriter(context, newWorkingFileName, value));
+	@Override
+	public void write(EtlKey key, Object val) throws IOException,
+			InterruptedException {
+		if (val instanceof CamusWrapper<?>) {
+			if (key.getTime() < beginTimeStamp) {
+				// ((Mapper.Context)context).getCounter("total",
+				// "skip-old").increment(1);
+				committer.addOffset(key);
+			} else {
+				if (!key.getTopic().equals(currentTopic)) {
+					for (RecordWriter<IEtlKey, CamusWrapper> writer : dataWriters
+							.values()) {
+						writer.close(context);
+					}
+					dataWriters.clear();
+					currentTopic = key.getTopic();
 				}
-				dataWriters.get(newWorkingFileName).write(newKey, value); 
+				/*
+				 * committer.addCounts(key);
+				 * 
+				 * 
+				 * String workingFileName =
+				 * EtlMultiOutputFormat.getWorkingFileName(context, key);
+				 * log.info("Working file name is:" + workingFileName); if
+				 * (!dataWriters.containsKey(workingFileName)) {
+				 * dataWriters.put(workingFileName, getDataRecordWriter(context,
+				 * workingFileName, value)); }
+				 * dataWriters.get(workingFileName).write(key, value);
+				 */
+				// New output
+
+				CamusWrapper value = (CamusWrapper) val;
+				EtlOutputKey newKey = new EtlOutputKey(key);
+				/*
+				 * if(key.getTopic().equals("partition_test")) {
+				 * 
+				 * AdLogRecord record = (AdLogRecord) value.getRecord();
+				 * newKey.setOutputPartitionColumn(record.getTimestamp());
+				 * newKey
+				 * .setOutputBucketingId(Integer.valueOf(record.getBucketId()));
+				 * newKey.setOutputTopic(record.getEventType());
+				 * committer.addCounts(newKey); String newWorkingFileName =
+				 * EtlMultiOutputFormat.getWorkingFileName(context, newKey);
+				 * 
+				 * if (!dataWriters.containsKey(newWorkingFileName)) {
+				 * dataWriters.put(newWorkingFileName,
+				 * getDataRecordWriter(context, newWorkingFileName, value)); }
+				 * dataWriters.get(newWorkingFileName).write(newKey, value); }
+				 * else
+				 */
+
+				AdLogRecord record = (AdLogRecord) value.getRecord();
+				newKey.setOutputs(getOutputs(record));
+
+				committer.addCounts(newKey);
+
+				for (AdLogOutput output : newKey.getOutputs()) {
+					String newWorkingFileName = EtlMultiOutputFormat
+							.getWorkingFileName(context, newKey, output);
+					if (!dataWriters.containsKey(newWorkingFileName)) {
+						log.info("NewWorkingFileName does not exist. Creating recordWriter for "
+								+ newWorkingFileName);
+						context.getCounter("total", "open-file").increment(1);
+						context.getCounter("total", output.getTableName())
+								.increment(1);
+						log.info("Current # of open files is:"
+								+ context.getCounter("total", "open-file")
+										.getValue());
+						dataWriters.put(
+								newWorkingFileName,
+								getDataRecordWriter(context,
+										newWorkingFileName, value));
+					}
+					dataWriters.get(newWorkingFileName).write(newKey, value);
+				}
+
 			}
+		} else if (val instanceof ExceptionWritable) {
+			committer.addOffset(key);
+			System.err.println(key.toString());
+			System.err.println(val.toString());
+			errorWriter.append(key, (ExceptionWritable) val);
 		}
-      }
-    }
-    else if (val instanceof ExceptionWritable)
-    {
-      committer.addOffset(key);
-      System.err.println(key.toString());
-      System.err.println(val.toString());
-      errorWriter.append(key, (ExceptionWritable) val);
-    }
-  }
+	}
   
-  List<String> getOutputTables(AdLogRecord log_record)
+  List<AdLogOutput> getOutputs(AdLogRecord log_record)
   {
-	  List<String> outputTBLs = new ArrayList<String>();
+	  List<AdLogOutput> outputTBLs = new ArrayList<AdLogOutput>();
 	  try
       {
 
@@ -194,7 +195,9 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
           boolean isEmptyCookie = log_record.getColumn(Fields.COOKIES).isEmpty()
                   && log_record.getColumn(Fields.MODIFIED_COOKIES).isEmpty();
 
-
+          String timestampStr = log_record.getColumn(Fields.SERVER_TIMESTAMP);
+          long timestampLong = Long.valueOf(timestampStr);
+          String timestampInDayStr = String.valueOf(timestampLong - timestampLong % milisecondsInDay);
 
           // Inner try is for
           // 1. isTesting Record which does a IP Lookup which can throw an exception
@@ -204,7 +207,12 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
           {
               if (isTestingRecord(userId, url, ip))
               {
-            	  outputTBLs.add("BOTs");
+            	  AdLogOutput outputs = new AdLogOutput();
+            	  outputs.setBucketId(0);
+            	  outputs.setPartition_strategy("daily");
+            	  outputs.setTableName("BOTs");
+            	  outputs.setTimestamp(timestampInDayStr);
+            	  outputTBLs.add(outputs);
                   return outputTBLs;
               }
 
@@ -219,19 +227,35 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
           //1. collect cookie data
           if (!isEmptyCookie)
           {
-        	  outputTBLs.add("cookie");
+        	  AdLogOutput outputs = new AdLogOutput();
+        	  
+        	  outputs.setBucketId(Math.abs((int) ((Long.valueOf(userId) % 64))));
+        	  outputs.setPartition_strategy("hourly");
+        	  outputs.setTableName("cookie");
+        	  outputs.setTimestamp(timestampStr);
+        	  outputTBLs.add(outputs);
           }
 
           //2. collect clicks data
           if (AdLogEventType.AdClick.equals(AdLogEventType.get(eventType)))
           {
-        	  outputTBLs.add("click");
+        	  AdLogOutput outputs = new AdLogOutput();
+        	  outputs.setBucketId(0);
+        	  outputs.setPartition_strategy("daily");
+        	  outputs.setTableName("clicks");
+        	  outputs.setTimestamp(timestampInDayStr);
+        	  outputTBLs.add(outputs);
           }
 
           //3. collect rtb video data - { the event type could be video view (ve), all the sub event types are logged}
           if (AdLogEventType.Video.equals(AdLogEventType.get(eventType)))
           {
-        	  outputTBLs.add("rtb_video");
+        	  AdLogOutput outputs = new AdLogOutput();
+        	  outputs.setBucketId(0);
+        	  outputs.setPartition_strategy("daily");
+        	  outputs.setTableName("rtb_video");
+        	  outputs.setTimestamp(timestampInDayStr);
+        	  outputTBLs.add(outputs);
           }
 
           //4. collect beacon and external user segment records.
@@ -239,13 +263,23 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
                   || AdLogEventType.BeaconClick.equals(AdLogEventType.get(eventType))
                   || AdLogEventType.ExternalUserSegment.equals(AdLogEventType.get(eventType)))
           {
-        	  outputTBLs.add("actions");
+        	  AdLogOutput outputs = new AdLogOutput();
+        	  outputs.setBucketId(Math.abs((int) ((Long.valueOf(userId) % 64))));
+        	  outputs.setPartition_strategy("hourly");
+        	  outputs.setTableName("actions");
+        	  outputs.setTimestamp(timestampStr);
+        	  outputTBLs.add(outputs);
           }
 
           //5. collect action data.
           else if (AdLogEventType.ConversionAction.equals(AdLogEventType.get(eventType)))
           {
-        	  outputTBLs.add("actions");
+        	  AdLogOutput outputs = new AdLogOutput();
+        	  outputs.setBucketId(Math.abs((int) ((Long.valueOf(userId) % 64))));
+        	  outputs.setPartition_strategy("hourly");
+        	  outputs.setTableName("actions");
+        	  outputs.setTimestamp(timestampStr);
+        	  outputTBLs.add(outputs);
           }
 
           //6. collect adview ( both normal & video ads) , adclick, and adselect data.
@@ -257,7 +291,13 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
               // Filter out empty request id's for RTB Placements
               if (AdLogEventType.AdSelect.equals(AdLogEventType.get(eventType))
                       && requestId.isEmpty()) {
-            	  outputTBLs.add("reminder");
+            	  AdLogOutput outputs = new AdLogOutput();
+            	  outputs.setBucketId(0);
+            	  outputs.setPartition_strategy("daily");
+            	  outputs.setTableName("reminder");
+            	  outputs.setTimestamp(timestampInDayStr);
+            	  outputTBLs.add(outputs);
+            	  return outputTBLs;
               }
 
               String ad_instance_id = log_record.getColumn(AdFields.AD_INSTANCE_ID);
@@ -267,27 +307,65 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
                * impression_draft/2010/11/10/15/file.tsv.bz2:aiid:959d32GwCbsH
                */
               if (!isValidAdInstanceId(ad_instance_id)) {
-            	  outputTBLs.add("reminder");
+            	  AdLogOutput outputs = new AdLogOutput();
+            	  outputs.setBucketId(0);
+            	  outputs.setPartition_strategy("daily");
+            	  outputs.setTableName("reminder");
+            	  outputs.setTimestamp(timestampInDayStr);
+            	  outputTBLs.add(outputs);
+            	  return outputTBLs;
               }
-              outputTBLs.add("impression_draft");
+              AdLogOutput outputs = new AdLogOutput();
+        	  outputs.setBucketId(0);
+        	  outputs.setPartition_strategy("daily");
+        	  outputs.setTableName("impression_draft");
+        	  outputs.setTimestamp(timestampInDayStr);
+        	  outputTBLs.add(outputs);
           }
           else if (AdLogEventType.InteractionTracker.equals(AdLogEventType.get(eventType))) {
-        	  outputTBLs.add("interaction_tracker");
+        	  AdLogOutput outputs = new AdLogOutput();
+        	  outputs.setBucketId(0);
+        	  outputs.setPartition_strategy("daily");
+        	  outputs.setTableName("interaction_tracker");
+        	  outputs.setTimestamp(timestampInDayStr);
+        	  outputTBLs.add(outputs);
           }
           else if (AdLogEventType.CookieMatching.equals(AdLogEventType.get(eventType))) {
-        	  outputTBLs.add("cookie_matching");
-
+        	  AdLogOutput outputs = new AdLogOutput();
+        	  outputs.setBucketId(Math.abs((int) ((Long.valueOf(userId) % 64))));
+        	  outputs.setPartition_strategy("hourly");
+        	  outputs.setTableName("cookie_matching");
+        	  outputs.setTimestamp(timestampStr);
+        	  outputTBLs.add(outputs);
           }
           //** collect remainder data
           else
           {
-        	  outputTBLs.add("reminder");
+        	  AdLogOutput outputs = new AdLogOutput();
+        	  outputs.setBucketId(0);
+        	  outputs.setPartition_strategy("daily");
+        	  outputs.setTableName("reminder");
+        	  outputs.setTimestamp(timestampInDayStr);
+        	  outputTBLs.add(outputs);
           }
       }
       //** collect error records
       catch (Exception e)
       {
-    	  outputTBLs.add("errors");
+    	  AdLogOutput outputs = new AdLogOutput();
+    	  outputs.setBucketId(0);
+    	  outputs.setPartition_strategy("daily");
+    	  outputs.setTableName("errors");
+    	  try {
+    		  String timestampStr = log_record.getColumn(Fields.SERVER_TIMESTAMP);
+              long timestampLong = Long.valueOf(timestampStr);
+              String timestampInDayStr = String.valueOf(timestampLong - timestampLong % milisecondsInDay);
+			outputs.setTimestamp(timestampInDayStr);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+    	  outputTBLs.add(outputs);
       }
 	  return outputTBLs;
   }

@@ -10,14 +10,14 @@ import com.rocketfuel.grid.common.AdLogRecord;
 
 public class AdLogRecordDecoder extends MessageDecoder<byte[], AdLogRecord>{
 	AdLogRecord record = new AdLogRecord();
-	private static org.apache.log4j.Logger log = Logger.getLogger(JsonStringMessageDecoder.class);
+	private static org.apache.log4j.Logger log = Logger.getLogger(AdLogRecordDecoder.class);
 
 	@Override
 	public CamusWrapper<AdLogRecord> decode(byte[] message) {
 		
 		try {
 			record.clear();
-			record.set(new String(message));
+		    record.set(new String(message));
 			return new CamusWrapper<AdLogRecord>(record);
 		} catch (IOException e) {
 			log.error("Error reading message:" + message.toString());

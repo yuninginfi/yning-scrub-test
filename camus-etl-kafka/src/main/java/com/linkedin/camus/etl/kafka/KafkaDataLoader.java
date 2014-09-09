@@ -58,6 +58,8 @@ public class KafkaDataLoader {
 		
 		*/
 		
+		/*
+		
 		Properties props = new Properties();
 		props.put("metadata.broker.list", "10.40.42.40:9092");
 		props.put("zk.connect", "10.40.42.40:9092");
@@ -91,7 +93,7 @@ public class KafkaDataLoader {
 				e.printStackTrace();
 			}
 		}
-		
+		*/
 		
 		System.out.println("end");
 	}

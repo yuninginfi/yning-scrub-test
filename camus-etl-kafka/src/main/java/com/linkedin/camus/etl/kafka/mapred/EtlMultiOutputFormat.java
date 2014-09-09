@@ -17,6 +17,7 @@ import org.apache.log4j.Logger;
 import org.joda.time.format.DateTimeFormatter;
 
 import com.linkedin.camus.coders.Partitioner;
+import com.linkedin.camus.etl.AdLogOutput;
 import com.linkedin.camus.etl.RecordWriterProvider;
 import com.linkedin.camus.etl.kafka.coders.TimestampBasedPartitioner;
 import com.linkedin.camus.etl.kafka.common.DateUtils;
@@ -184,15 +185,27 @@ public class EtlMultiOutputFormat extends FileOutputFormat<EtlKey, Object> {
     }
 
     public static List<String> getWorkingFileNames(JobContext context, EtlKey key) throws IOException {
-        Partitioner partitioner = getPartitioner(context, key.getTopic());
+    	TimestampBasedPartitioner partitioner = (TimestampBasedPartitioner) getPartitioner(context, key.getTopic());
         List<String> result = new ArrayList<String>();
         
-		for (String tableName : key.getOutputTopics()) {
-			result.add("data." + tableName.replaceAll("\\.", "_") + "."
+		for (AdLogOutput output : key.getOutputs()) {
+			result.add("data." + output.getTableName().replaceAll("\\.", "_") + "."
 					+ key.getLeaderId() + "." + key.getPartition() + "."
-					+ partitioner.encodePartition(context, key) + "."
-					+ key.getOutputBucketingId());
+					+ partitioner.encodePartition(context, output) + "."
+					+ output.getBucketId());
 		}
+		return result;
+	}
+    
+    public static String getWorkingFileName(JobContext context, EtlKey key, AdLogOutput output) throws IOException {
+    	TimestampBasedPartitioner partitioner = (TimestampBasedPartitioner) getPartitioner(context, key.getTopic());
+        String result = "";
+        
+			result = "data." + output.getTableName().replaceAll("\\.", "_") + "."
+					+ key.getLeaderId() + "." + key.getPartition() + "."
+					+ partitioner.encodePartition(context, output) + "."
+					+ output.getBucketId();
+		
 		return result;
 	}
     

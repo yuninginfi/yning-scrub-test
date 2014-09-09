@@ -4,10 +4,20 @@ import java.util.List;
 
 import org.apache.hadoop.io.MapWritable;
 
+import com.linkedin.camus.etl.AdLogOutput;
+
 public class EtlOutputKey extends EtlKey{
-	List<String> outputTopic;
-	String outputPartitionColumn;
-	int outputBucketingId;
+	List<AdLogOutput> outputs;
+
+	@Override
+	public List<AdLogOutput> getOutputs()
+    {
+		return outputs;
+    };
+
+	public void setOutputs(List<AdLogOutput> outputs) {
+		this.outputs = outputs;
+	}
 
 	public EtlOutputKey(EtlKey other) {
 		this.partition = other.partition;
@@ -22,29 +32,5 @@ public class EtlOutputKey extends EtlKey{
         this.partitionMap = new MapWritable(other.partitionMap);
 	}
 	
-    @Override
-	public List<String> getOutputTopics() {
-		return outputTopic;
-	}
-
-	public void setOutputTopic(List<String> outputTopic) {
-		this.outputTopic = outputTopic;
-	}
-	
-	@Override
-	public String getOutputPartitionColumn() {
-		return outputPartitionColumn;
-	}
-	public void setOutputPartitionColumn(String outputPartitionColumn) {
-		this.outputPartitionColumn = outputPartitionColumn;
-	}
-	
-	@Override
-	public int getOutputBucketingId() {
-		return outputBucketingId;
-	}
-	public void setOutputBucketingId(int outputBucketingId) {
-		this.outputBucketingId = outputBucketingId;
-	}
-
+   
 }
