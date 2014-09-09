@@ -189,6 +189,7 @@ public class EtlRecordReader extends RecordReader<EtlKey, CamusWrapper> {
         if(context.getCounter("total", "open-file").getValue() >= maxOpenFiles)
         {
         	log.info("Reached max open file, stoping reading....");
+        	context.getCounter("total", "num_mapper_reaching_max_writing_file").increment(1);
         	if (reader != null) {
                 closeReader();
             }

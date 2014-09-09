@@ -1,35 +1,27 @@
 package com.linkedin.camus.etl.kafka;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Properties;
 
-import kafka.api.PartitionFetchInfo;
-import kafka.common.TopicAndPartition;
-import kafka.javaapi.FetchRequest;
-import kafka.javaapi.FetchResponse;
 import kafka.javaapi.producer.Producer;
-import kafka.javaapi.consumer.SimpleConsumer;
-import kafka.javaapi.message.ByteBufferMessageSet;
-import kafka.message.Message;
-import kafka.message.MessageAndOffset;
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
-import kafka.producer.SyncProducerConfig;
 
-public class KafkaMessageGenerator {
+public class KafkaDataLoader {
 	public static void main(String args[])
 	{
 		System.out.println("start");
-		
-		SimpleConsumer simpleConsumer = new SimpleConsumer("lsv-50.rfiserve.net", 9092,
+		/*
+		SimpleConsumer simpleConsumer = new SimpleConsumer("inw-100.rfiserve.net", 9092,
 				1000,
 				100000,
 				"yning_test");
 		
 		TopicAndPartition topicAndPartition = new TopicAndPartition(
-				"AdBeaconServer", 50);
+				"AdBeaconServer", 0);
 		PartitionFetchInfo partitionFetchInfo = new PartitionFetchInfo(
 				1761361, 100000);
 		
@@ -64,18 +56,42 @@ public class KafkaMessageGenerator {
 		
 
 		
-		/*
+		*/
+		
 		Properties props = new Properties();
-		props.put("metadata.broker.list", "10.20.14.90:9092");
-		props.put("zk.connect", "10.20.14.90:9092");
+		props.put("metadata.broker.list", "10.40.42.40:9092");
+		props.put("zk.connect", "10.40.42.40:9092");
 		props.put("serializer.class", "kafka.serializer.StringEncoder");
 		ProducerConfig config = new ProducerConfig(props);
 		Producer<String, String> producer = new Producer<String, String>(config);
-		for(long i = 0 ; i < 1000000 ; i ++)
+		
+		BufferedReader reader = null;
+		try {
+			reader = new BufferedReader(new FileReader("/tmp/AdBeaconServer1M_2"));
+			String line = null;
+			int num = 0;
+			while ((line = reader.readLine()) != null) {
+				if(++num % 1000 == 0)
+					System.out.println(num);
+				KeyedMessage<String, String> data = new KeyedMessage<String, String>("adlog_2", line);
+				producer.send(data);
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally
 		{
-			KeyedMessage<String, String> data = new KeyedMessage<String, String>("partition_test", "{\"eventType\":\"1\",\"timestamp\":\"2012-06-05\",\"bucketId\":\"4\",\"gogogo\":\"gogogo\"}");
-			producer.send(data);
-		}*/
+			try {
+				reader.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
 		
 		System.out.println("end");
 	}
