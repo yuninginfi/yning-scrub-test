@@ -108,39 +108,13 @@ public class EtlMultiOutputRecordWriter extends RecordWriter<EtlKey, Object>
 					dataWriters.clear();
 					currentTopic = key.getTopic();
 				}
-				/*
-				 * committer.addCounts(key);
-				 * 
-				 * 
-				 * String workingFileName =
-				 * EtlMultiOutputFormat.getWorkingFileName(context, key);
-				 * log.info("Working file name is:" + workingFileName); if
-				 * (!dataWriters.containsKey(workingFileName)) {
-				 * dataWriters.put(workingFileName, getDataRecordWriter(context,
-				 * workingFileName, value)); }
-				 * dataWriters.get(workingFileName).write(key, value);
-				 */
+
 				// New output
 
 				CamusWrapper value = (CamusWrapper) val;
+				
+				//TODO: this varibale can be deprecated
 				EtlOutputKey newKey = new EtlOutputKey(key);
-				/*
-				 * if(key.getTopic().equals("partition_test")) {
-				 * 
-				 * AdLogRecord record = (AdLogRecord) value.getRecord();
-				 * newKey.setOutputPartitionColumn(record.getTimestamp());
-				 * newKey
-				 * .setOutputBucketingId(Integer.valueOf(record.getBucketId()));
-				 * newKey.setOutputTopic(record.getEventType());
-				 * committer.addCounts(newKey); String newWorkingFileName =
-				 * EtlMultiOutputFormat.getWorkingFileName(context, newKey);
-				 * 
-				 * if (!dataWriters.containsKey(newWorkingFileName)) {
-				 * dataWriters.put(newWorkingFileName,
-				 * getDataRecordWriter(context, newWorkingFileName, value)); }
-				 * dataWriters.get(newWorkingFileName).write(newKey, value); }
-				 * else
-				 */
 
 				AdLogRecord record = (AdLogRecord) value.getRecord();
 				newKey.setOutputs(getOutputs(record));
