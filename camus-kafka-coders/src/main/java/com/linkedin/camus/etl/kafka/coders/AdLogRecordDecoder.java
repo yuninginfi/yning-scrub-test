@@ -9,7 +9,8 @@ import com.linkedin.camus.coders.MessageDecoder;
 import com.rocketfuel.grid.common.AdLogRecord;
 
 public class AdLogRecordDecoder extends MessageDecoder<byte[], AdLogRecord>{
-	AdLogRecord record = new AdLogRecord();
+	private static AdLogRecord record = new AdLogRecord();
+	private static CamusWrapper<AdLogRecord> wrapper = new CamusWrapper<AdLogRecord>(null);
 	private static org.apache.log4j.Logger log = Logger.getLogger(AdLogRecordDecoder.class);
 
 	@Override
@@ -18,7 +19,8 @@ public class AdLogRecordDecoder extends MessageDecoder<byte[], AdLogRecord>{
 		try {
 			record.clear();
 		    record.set(new String(message));
-			return new CamusWrapper<AdLogRecord>(record);
+		    wrapper.setRecord(record);
+			return wrapper;
 		} catch (IOException e) {
 			log.error("Error reading message:" + message.toString());
 			throw new RuntimeException(e);

@@ -40,6 +40,10 @@ public class CamusWrapper<R> {
     public R getRecord() {
         return record;
     }
+    
+    public void setRecord(R record) {
+    	this.record = record;
+    }
 
     /**
      * Returns current if not set by the decoder
