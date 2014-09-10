@@ -33,6 +33,7 @@ public class EtlKey implements WritableComparable<EtlKey>, IEtlKey {
 	protected String server = "";
 	protected String service = "";
     protected MapWritable partitionMap = new MapWritable();
+	private List<AdLogOutput> outputs;
 
 
 	/**
@@ -244,9 +245,13 @@ public class EtlKey implements WritableComparable<EtlKey>, IEtlKey {
         return builder.toString();
 	}
 
-    @Override
-    public List<AdLogOutput> getOutputs()
+	@Override
+	public List<AdLogOutput> getOutputs()
     {
-		return null;
-    }
+		return outputs;
+    };
+
+	public void setOutputs(List<AdLogOutput> outputs) {
+		this.outputs = outputs;
+	}
 }
